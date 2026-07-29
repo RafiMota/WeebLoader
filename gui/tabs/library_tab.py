@@ -130,7 +130,7 @@ class LibraryTab(QWidget):
         left_layout.addWidget(header)
         
         # Refresh button
-        refresh_btn = AnimatedButton("🔄 Refresh")
+        refresh_btn = AnimatedButton("Refresh")
         refresh_btn.clicked.connect(self._scan_library)
         left_layout.addWidget(refresh_btn)
         
@@ -536,27 +536,27 @@ class LibraryTab(QWidget):
         
         # Download missing chapters button
         if manga_info.get('url'):
-            download_btn = AnimatedButton("📥 Download Missing Chapters")
+            download_btn = AnimatedButton("Download Missing Chapters")
             download_btn.clicked.connect(lambda: self._download_missing_chapters(manga_info))
             actions_layout.addWidget(download_btn)
         
         # Convert to PDF button
-        pdf_btn = AnimatedButton("📄 Convert All to PDF")
+        pdf_btn = AnimatedButton("Convert All to PDF")
         pdf_btn.clicked.connect(lambda: self.convertToPDF.emit(manga_info['path']))
         actions_layout.addWidget(pdf_btn)
         
         # Convert to EPUB button
-        epub_btn = AnimatedButton("📚 Convert All to EPUB")
+        epub_btn = AnimatedButton("Convert All to EPUB")
         epub_btn.clicked.connect(lambda: self.convertToEPUB.emit(manga_info['path']))
         actions_layout.addWidget(epub_btn)
         
         # Convert to CBZ button
-        cbz_btn = AnimatedButton("📦 Convert All to CBZ")
+        cbz_btn = AnimatedButton("Convert All to CBZ")
         cbz_btn.clicked.connect(lambda: self.convertToCBZ.emit(manga_info['path']))
         actions_layout.addWidget(cbz_btn)
         
         # Open folder button
-        open_btn = AnimatedButton("📁 Open Folder")
+        open_btn = AnimatedButton("Open Folder")
         open_btn.clicked.connect(lambda: self._open_folder(manga_info['path']))
         actions_layout.addWidget(open_btn)
         

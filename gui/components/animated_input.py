@@ -5,7 +5,7 @@ Modern text input with focus glow and clear button.
 
 from PyQt6.QtWidgets import (
     QLineEdit, QHBoxLayout, QPushButton, QWidget, 
-    QGraphicsDropShadowEffect
+    QGraphicsDropShadowEffect, QSizePolicy
 )
 from PyQt6.QtCore import (
     Qt, QPropertyAnimation, QEasingCurve, pyqtProperty, pyqtSignal
@@ -84,12 +84,30 @@ class InputWithButton(QWidget):
     ):
         super().__init__(parent)
         
+        self.setMinimumHeight(56)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Spacing.SM)
         
         # Input field
         self._input = AnimatedInput(placeholder)
+        self._input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self._input.setMinimumWidth(340)
+        self._input.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {Colors.BG_LIGHT};
+                color: {Colors.TEXT_PRIMARY};
+                border: none;
+                border-radius: {Spacing.RADIUS_MD}px;
+                padding: {Spacing.SM}px {Spacing.LG}px;
+                min-height: 48px;
+            }}
+            QLineEdit:focus {{
+                outline: none;
+            }}
+        """)
         self._input.textChanged.connect(self.textChanged.emit)
         self._input.returnPressed.connect(self.returnPressed.emit)
         layout.addWidget(self._input)
@@ -98,7 +116,8 @@ class InputWithButton(QWidget):
         self._button = QPushButton(button_icon + button_text if button_icon else button_text)
         self._button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self._button.setMinimumHeight(48)
-        self._button.setMinimumWidth(100)
+        self._button.setMinimumWidth(120)
+        self._button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._button.clicked.connect(self.buttonClicked.emit)
         self._button.setStyleSheet(f"""
             QPushButton {{
@@ -110,12 +129,12 @@ class InputWithButton(QWidget):
                 padding: 0 {Spacing.LG}px;
             }}
             QPushButton:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                    stop:0 #00E5FF, stop:1 #FF1AE8);
+                background: {Colors.GRADIENT_PRIMARY};
+                opacity: 0.95;
             }}
             QPushButton:pressed {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                    stop:0 #00C4DB, stop:1 #DB00C4);
+                background: {Colors.GRADIENT_PRIMARY};
+                opacity: 0.85;
             }}
         """)
         layout.addWidget(self._button)
@@ -174,6 +193,6 @@ class PathInput(InputWithButton):
         super().__init__(
             placeholder=placeholder,
             button_text="Browse",
-            button_icon="📁 ",
+            button_icon="",
             parent=parent
         )

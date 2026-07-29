@@ -7,7 +7,7 @@ import sys
 import os
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QFontDatabase, QFont
+from PyQt6.QtGui import QFontDatabase, QFont, QIcon
 from PyQt6.QtCore import Qt
 
 # Add parent directory to path for imports
@@ -16,9 +16,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def run_gui():
     """Launch the WeebCentral Downloader GUI application."""
-    # Enable high DPI scaling
-    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-    
+    # Qt6 is always HiDPI-aware, but on a fractional display scale (125%, 150%, ...)
+    # it rounds to the nearest integer factor by default, which blurs/pixelates
+    # text. PassThrough uses the exact scale factor instead.
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     
@@ -36,6 +40,11 @@ def run_gui():
     
     # Apply theme
     app.setStyleSheet(get_stylesheet())
+
+    # Set application icon
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "logo.png")
+    if os.path.exists(logo_path):
+        app.setWindowIcon(QIcon(os.path.normpath(logo_path)))
     
     # Create and show main window
     window = MainWindow()

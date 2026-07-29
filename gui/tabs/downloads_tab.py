@@ -111,16 +111,16 @@ class DownloadsTab(QWidget):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(Spacing.SM)
         
-        self._retry_all_btn = AnimatedButton("🔄 Retry All Failed")
+        self._retry_all_btn = AnimatedButton("Retry All Failed")
         self._retry_all_btn.clicked.connect(self._retry_all_failed)
         self._retry_all_btn.hide()  # Hidden until there are failed downloads
         btn_row.addWidget(self._retry_all_btn)
         
-        self._clear_btn = AnimatedButton("🗑️ Clear Completed")
+        self._clear_btn = AnimatedButton("Clear Completed")
         self._clear_btn.clicked.connect(self._clear_completed)
         btn_row.addWidget(self._clear_btn)
         
-        self._open_folder_btn = AnimatedButton("📁 Open Folder")
+        self._open_folder_btn = AnimatedButton("Open Folder")
         self._open_folder_btn.clicked.connect(self._open_download_folder)
         btn_row.addWidget(self._open_folder_btn)
         
@@ -138,6 +138,9 @@ class DownloadsTab(QWidget):
         
         self._sort_combo = QComboBox()
         self._sort_combo.addItems(["Name ↑", "Name ↓", "Progress ↑", "Progress ↓"])
+        # Windows renders the popup's native backing surface as solid black behind
+        # the styled (rounded) list unless the popup window is made translucent.
+        self._sort_combo.view().window().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self._sort_combo.setStyleSheet(f"""
             QComboBox {{
                 background-color: {Colors.BG_LIGHT};

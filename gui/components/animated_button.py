@@ -91,7 +91,7 @@ class DangerButton(AnimatedButton):
 
 class SuccessButton(AnimatedButton):
     """Green themed button for confirmatory actions."""
-    
+
     def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
         self.setObjectName("success")
@@ -103,7 +103,7 @@ class IconButton(AnimatedButton):
     Compact button designed for icons.
     Square shape with centered content.
     """
-    
+
     def __init__(self, icon_text: str = "", parent=None):
         super().__init__(icon_text, parent)
         self.setFixedSize(44, 44)
@@ -119,65 +119,3 @@ class IconButton(AnimatedButton):
                 border-color: {Colors.NEON_CYAN};
             }}
         """)
-
-
-class NavButton(AnimatedButton):
-    """
-    Navigation sidebar button.
-    Supports checked state with gradient fill.
-    """
-    
-    def __init__(self, icon: str = "", text: str = "", parent=None):
-        super().__init__(parent=parent)
-        self.setObjectName("nav-button")
-        self.setCheckable(True)
-        self.setMinimumHeight(50)
-        
-        # Display icon and text
-        if icon and text:
-            self.setText(f"  {icon}  {text}")
-        elif icon:
-            self.setText(icon)
-        else:
-            self.setText(text)
-        
-        # Left-align text
-        self.setStyleSheet(f"""
-            QPushButton#nav-button {{
-                text-align: left;
-                padding-left: {Spacing.LG}px;
-                font-size: 14px;
-                background: transparent;
-                border: none;
-                border-radius: {Spacing.RADIUS_MD}px;
-                color: {Colors.TEXT_SECONDARY};
-            }}
-            QPushButton#nav-button:hover {{
-                background-color: {Colors.BG_HOVER};
-                color: {Colors.TEXT_PRIMARY};
-            }}
-            QPushButton#nav-button:checked {{
-                background: {Colors.GRADIENT_PRIMARY};
-                color: {Colors.TEXT_PRIMARY};
-            }}
-        """)
-        
-        # Custom glow for nav buttons
-        self.set_glow_color(Colors.NEON_CYAN)
-    
-    def enterEvent(self, event):
-        """Subtle glow on hover for nav buttons."""
-        self._hover_anim.stop()
-        self._hover_anim.setStartValue(self._glow_radius)
-        self._hover_anim.setEndValue(10)
-        self._hover_anim.start()
-        # Skip parent's enterEvent to avoid double animation
-        QPushButton.enterEvent(self, event)
-    
-    def leaveEvent(self, event):
-        """Fade out glow."""
-        self._hover_anim.stop()
-        self._hover_anim.setStartValue(self._glow_radius)
-        self._hover_anim.setEndValue(0)
-        self._hover_anim.start()
-        QPushButton.leaveEvent(self, event)

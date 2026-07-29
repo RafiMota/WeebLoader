@@ -1,17 +1,16 @@
 """
 Main Window for WeebCentral Downloader.
-Tabbed interface with sidebar navigation and animated transitions.
+Tabbed interface with a centered bottom navigation bar.
 """
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-    QStackedWidget, QFrame, QLabel, QButtonGroup, QMessageBox
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QStackedWidget, QMessageBox
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve
 
-from gui.theme import Colors, Spacing, Fonts
+from gui.theme import Colors, Spacing
 from gui.config import get_settings, save_settings
-from gui.components.animated_button import NavButton
+from gui.components.bottom_nav import BottomNavBar
 from gui.tabs import UrlInputTab, MangaInfoTab, DownloadsTab, SettingsTab, LibraryTab
 from gui.workers import ScraperWorker, DownloadWorker, ConversionWorker
 from gui.components.download_card import DownloadStatus
@@ -21,7 +20,7 @@ from flaresolverr_client import is_flaresolverr_running
 class MainWindow(QMainWindow):
     """
     Main application window with tabbed navigation.
-    Features animated sidebar and page transitions.
+    Features a centered bottom pill navigation bar and page transitions.
     """
     
     def __init__(self, parent=None):
@@ -51,97 +50,20 @@ class MainWindow(QMainWindow):
         
         if settings.window_x >= 0 and settings.window_y >= 0:
             self.move(settings.window_x, settings.window_y)
+        
+        # Always start maximized
+        self.showMaximized()
     
     def _setup_ui(self):
         """Initialize UI components."""
         # Central widget
         central = QWidget()
         self.setCentralWidget(central)
-        
-        main_layout = QHBoxLayout(central)
+
+        main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
-        # ─────────────────────────────────────────────────────────────
-        # Sidebar Navigation
-        # ─────────────────────────────────────────────────────────────
-        sidebar = QFrame()
-        sidebar.setFixedWidth(220)
-        sidebar.setStyleSheet(f"""
-            QFrame {{
-                background-color: {Colors.BG_DARK};
-                border-right: 1px solid {Colors.BORDER_DEFAULT};
-            }}
-        """)
-        
-        sidebar_layout = QVBoxLayout(sidebar)
-        sidebar_layout.setContentsMargins(Spacing.MD, Spacing.LG, Spacing.MD, Spacing.LG)
-        sidebar_layout.setSpacing(Spacing.SM)
-        
-        # App title
-        title = QLabel("WeebCentral")
-        title.setStyleSheet(f"""
-            QLabel {{
-                color: {Colors.TEXT_PRIMARY};
-                font-family: {Fonts.FAMILY_DISPLAY};
-                font-size: {Fonts.SIZE_H2}px;
-                font-weight: bold;
-                padding: {Spacing.MD}px;
-            }}
-        """)
-        sidebar_layout.addWidget(title)
-        
-        subtitle = QLabel("Manga Downloader")
-        subtitle.setStyleSheet(f"""
-            QLabel {{
-                color: {Colors.NEON_CYAN};
-                font-size: {Fonts.SIZE_SMALL}px;
-                padding-left: {Spacing.MD}px;
-                margin-bottom: {Spacing.LG}px;
-            }}
-        """)
-        sidebar_layout.addWidget(subtitle)
-        
-        # Navigation buttons
-        self._nav_group = QButtonGroup(self)
-        self._nav_group.setExclusive(True)
-        
-        self._nav_url = NavButton("🔗", "Enter URL")
-        self._nav_url.setChecked(True)
-        self._nav_group.addButton(self._nav_url, 0)
-        sidebar_layout.addWidget(self._nav_url)
-        
-        self._nav_info = NavButton("📖", "Manga Info")
-        self._nav_group.addButton(self._nav_info, 1)
-        sidebar_layout.addWidget(self._nav_info)
-        
-        self._nav_downloads = NavButton("⬇️", "Downloads")
-        self._nav_group.addButton(self._nav_downloads, 2)
-        sidebar_layout.addWidget(self._nav_downloads)
-        
-        self._nav_library = NavButton("📚", "Library")
-        self._nav_group.addButton(self._nav_library, 3)
-        sidebar_layout.addWidget(self._nav_library)
-        
-        self._nav_settings = NavButton("⚙️", "Settings")
-        self._nav_group.addButton(self._nav_settings, 4)
-        sidebar_layout.addWidget(self._nav_settings)
-        
-        sidebar_layout.addStretch()
-        
-        # Version info
-        version = QLabel("v2.0.0")
-        version.setStyleSheet(f"""
-            QLabel {{
-                color: {Colors.TEXT_MUTED};
-                font-size: {Fonts.SIZE_TINY}px;
-                padding: {Spacing.SM}px;
-            }}
-        """)
-        sidebar_layout.addWidget(version)
-        
-        main_layout.addWidget(sidebar)
-        
+
         # ─────────────────────────────────────────────────────────────
         # Content Area (Stacked Pages)
         # ─────────────────────────────────────────────────────────────
@@ -151,26 +73,42 @@ class MainWindow(QMainWindow):
                 background-color: {Colors.BG_DARKEST};
             }}
         """)
-        
+
         # Create tabs
         self._url_tab = UrlInputTab()
         self._info_tab = MangaInfoTab()
         self._downloads_tab = DownloadsTab()
         self._library_tab = LibraryTab()
         self._settings_tab = SettingsTab()
-        
+
         self._stack.addWidget(self._url_tab)
         self._stack.addWidget(self._info_tab)
         self._stack.addWidget(self._downloads_tab)
         self._stack.addWidget(self._library_tab)
         self._stack.addWidget(self._settings_tab)
-        
+
         main_layout.addWidget(self._stack, 1)
+
+        # ─────────────────────────────────────────────────────────────
+        # Bottom Navigation Bar (centered pill)
+        # ─────────────────────────────────────────────────────────────
+        nav_container = QWidget()
+        nav_layout = QHBoxLayout(nav_container)
+        nav_layout.setContentsMargins(Spacing.XL, 0, Spacing.XL, Spacing.XL)
+        nav_layout.addStretch()
+
+        self._nav_bar = BottomNavBar(
+            ["Enter URL", "Manga Info", "Downloads", "Library", "Settings"]
+        )
+        nav_layout.addWidget(self._nav_bar)
+
+        nav_layout.addStretch()
+        main_layout.addWidget(nav_container)
     
     def _connect_signals(self):
         """Connect all signals and slots."""
         # Navigation
-        self._nav_group.idClicked.connect(self._on_nav_clicked)
+        self._nav_bar.tabChanged.connect(self._on_nav_clicked)
         
         # URL Tab
         self._url_tab.fetchRequested.connect(self._on_fetch_requested)
@@ -199,10 +137,8 @@ class MainWindow(QMainWindow):
     def _switch_to_tab(self, index: int):
         """Switch to a specific tab programmatically."""
         self._stack.setCurrentIndex(index)
-        buttons = [self._nav_url, self._nav_info, self._nav_downloads, self._nav_library, self._nav_settings]
-        if 0 <= index < len(buttons):
-            buttons[index].setChecked(True)
-        
+        self._nav_bar.set_current(index)
+
         # Refresh library when switching to it
         if index == 3:  # Library tab
             self._library_tab.refresh()

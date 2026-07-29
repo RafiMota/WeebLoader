@@ -4,11 +4,12 @@ First tab where users enter manga URL to fetch information.
 """
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QFrame, QComboBox, QGraphicsOpacityEffect
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
+from PyQt6.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QCursor
+from urllib.parse import urlparse
 
 from gui.theme import Colors, Spacing, Fonts
 from gui.components.animated_button import PrimaryButton
@@ -38,37 +39,31 @@ class UrlInputTab(QWidget):
         layout.setSpacing(Spacing.XL)
         
         # Spacer to push content to center
-        layout.addStretch(1)
+        layout.addStretch(2)
         
         # Header section
         header_widget = QWidget()
         header_layout = QVBoxLayout(header_widget)
         header_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header_layout.setSpacing(Spacing.MD)
-        
-        # Icon
-        icon_label = QLabel("🔗")
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setStyleSheet(f"font-size: 64px;")
-        header_layout.addWidget(icon_label)
-        
-        # Title
-        title = QLabel("Enter Manga URL")
+        header_layout.setSpacing(Spacing.XS)
+
+        # App title
+        title = QLabel("WeebCentral")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setObjectName("title")
         header_layout.addWidget(title)
-        
+
         # Subtitle
-        subtitle = QLabel("Paste a WeebCentral manga URL to get started")
+        subtitle = QLabel("Manga Downloader")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet(f"""
             QLabel {{
-                color: {Colors.TEXT_SECONDARY};
-                font-size: {Fonts.SIZE_BODY}px;
+                color: {Colors.ACCENT};
+                font-size: {Fonts.SIZE_H3}px;
             }}
         """)
         header_layout.addWidget(subtitle)
-        
+
         layout.addWidget(header_widget)
         
         # Input section (centered card)
@@ -122,6 +117,9 @@ class UrlInputTab(QWidget):
         self._recent_combo = QComboBox()
         self._recent_combo.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self._recent_combo.setMinimumWidth(300)
+        # Windows renders the popup's native backing surface as solid black behind
+        # the styled (rounded) list unless the popup window is made translucent.
+        self._recent_combo.view().window().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self._recent_combo.setStyleSheet(f"""
             QComboBox {{
                 background-color: {Colors.BG_LIGHT};
@@ -153,7 +151,7 @@ class UrlInputTab(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         
-        self._fetch_btn = PrimaryButton("✨ Fetch Manga Info")
+        self._fetch_btn = PrimaryButton("Fetch Manga Info")
         self._fetch_btn.setMinimumWidth(200)
         self._fetch_btn.setMinimumHeight(52)
         self._fetch_btn.clicked.connect(self._on_fetch_clicked)
@@ -199,8 +197,10 @@ class UrlInputTab(QWidget):
         self._recent_combo.clear()
         self._recent_combo.addItem("Select a recent URL...")
         for url in settings.recent_urls:
-            # Show truncated URL
-            display = url if len(url) < 60 else url[:57] + "..."
+            parsed = urlparse(url)
+            # Use the last path segment for display, fallback to full URL if missing
+            path = parsed.path.rstrip('/')
+            display = path.split('/')[-1] if path else url
             self._recent_combo.addItem(display, url)
     
     def _on_recent_selected(self, text: str):

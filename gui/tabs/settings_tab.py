@@ -8,9 +8,10 @@ import os
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QFrame, QSlider, QCheckBox, QFileDialog, QMessageBox,
-    QScrollArea, QSpinBox
+    QScrollArea, QSpinBox, QSizePolicy, QGraphicsDropShadowEffect
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor
 
 from gui.theme import Colors, Spacing, Fonts
 from gui.components.animated_button import AnimatedButton, PrimaryButton
@@ -23,13 +24,21 @@ class SettingsSection(QFrame):
     
     def __init__(self, title: str, icon: str = "", parent=None):
         super().__init__(parent)
+        self.setMinimumWidth(900)
+        self.setMaximumWidth(1040)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.setStyleSheet(f"""
             QFrame {{
-                background-color: {Colors.BG_MEDIUM};
-                border: 1px solid {Colors.BORDER_DEFAULT};
+                background-color: {Colors.BG_DARK};
+                border: none;
                 border-radius: {Spacing.RADIUS_LG}px;
             }}
         """)
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(24)
+        shadow.setOffset(0, 0)
+        shadow.setColor(QColor(0, 0, 0, 120))
+        self.setGraphicsEffect(shadow)
         
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
@@ -92,6 +101,8 @@ class SettingsRow(QWidget):
         # Control container
         self._control_layout = QHBoxLayout()
         self._control_layout.setContentsMargins(0, Spacing.SM, 0, 0)
+        self._control_layout.setSpacing(Spacing.MD)
+        self._control_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(self._control_layout)
     
     def add_control(self, widget: QWidget):
@@ -126,17 +137,36 @@ class SettingsTab(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setViewportMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
         scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
         
         scroll_content = QWidget()
-        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_content.setStyleSheet("background: transparent;")
+        scroll_layout = QHBoxLayout(scroll_content)
         scroll_layout.setContentsMargins(0, 0, 0, 0)
-        scroll_layout.setSpacing(Spacing.LG)
+        scroll_layout.setSpacing(0)
+        scroll_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        scroll_layout.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinAndMaxSize)
+        
+        settings_container = QWidget()
+        settings_container.setObjectName("settings-container")
+        settings_container.setStyleSheet(f"""
+            QWidget#settings-container {{
+                background: transparent;
+            }}
+        """)
+        settings_container.setMinimumWidth(940)
+        settings_container.setMaximumWidth(1040)
+        settings_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        settings_container.setContentsMargins(Spacing.LG, 0, Spacing.LG, 0)
+        settings_layout = QVBoxLayout(settings_container)
+        settings_layout.setContentsMargins(0, 0, 0, 0)
+        settings_layout.setSpacing(Spacing.LG)
         
         # ─────────────────────────────────────────────────────────────
         # Download Settings Section
         # ─────────────────────────────────────────────────────────────
-        download_section = SettingsSection("Download Settings", "📥")
+        download_section = SettingsSection("Download Settings")
         
         # Output directory
         dir_row = SettingsRow("Output Directory", "Where downloaded manga will be saved")
@@ -162,7 +192,7 @@ class SettingsTab(QWidget):
         self._threads_label.setMinimumWidth(30)
         self._threads_label.setStyleSheet(f"""
             QLabel {{
-                color: {Colors.NEON_CYAN};
+                color: {Colors.ACCENT};
                 font-weight: bold;
                 font-size: {Fonts.SIZE_BODY}px;
             }}
@@ -187,7 +217,7 @@ class SettingsTab(QWidget):
         self._img_threads_label.setMinimumWidth(30)
         self._img_threads_label.setStyleSheet(f"""
             QLabel {{
-                color: {Colors.NEON_CYAN};
+                color: {Colors.ACCENT};
                 font-weight: bold;
                 font-size: {Fonts.SIZE_BODY}px;
             }}
@@ -211,7 +241,7 @@ class SettingsTab(QWidget):
         self._delay_label.setMinimumWidth(40)
         self._delay_label.setStyleSheet(f"""
             QLabel {{
-                color: {Colors.NEON_CYAN};
+                color: {Colors.ACCENT};
                 font-weight: bold;
                 font-size: {Fonts.SIZE_BODY}px;
             }}
@@ -219,12 +249,12 @@ class SettingsTab(QWidget):
         delay_row.add_control(self._delay_label)
         download_section.add_widget(delay_row)
         
-        scroll_layout.addWidget(download_section)
+        settings_layout.addWidget(download_section)
         
         # ─────────────────────────────────────────────────────────────
         # Conversion Settings Section
         # ─────────────────────────────────────────────────────────────
-        conversion_section = SettingsSection("Conversion Options", "🔄")
+        conversion_section = SettingsSection("Conversion Options")
         
         # PDF conversion
         self._pdf_check = QCheckBox("Convert to PDF")
@@ -299,9 +329,12 @@ class SettingsTab(QWidget):
         conversion_section.add_widget(self._delete_check)
         conversion_section.add_widget(delete_hint)
         
-        scroll_layout.addWidget(conversion_section)
+        settings_layout.addWidget(conversion_section)
         
         scroll_layout.addStretch()
+        scroll_layout.addWidget(settings_container)
+        scroll_layout.addStretch()
+        
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll, 1)
         
@@ -311,13 +344,13 @@ class SettingsTab(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(Spacing.MD)
         
-        self._reset_btn = AnimatedButton("🔄 Reset to Defaults")
+        self._reset_btn = AnimatedButton("Reset to Defaults")
         self._reset_btn.clicked.connect(self._reset_settings)
         btn_layout.addWidget(self._reset_btn)
         
         btn_layout.addStretch()
         
-        self._save_btn = PrimaryButton("💾 Save Settings")
+        self._save_btn = PrimaryButton("Save Settings")
         self._save_btn.clicked.connect(self._save_settings)
         btn_layout.addWidget(self._save_btn)
         
