@@ -5,15 +5,27 @@ Handles all application configuration with save/load functionality.
 
 import json
 import os
+import sys
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional
 
 
+def _app_base_dir() -> str:
+    """
+    Directory the settings file lives next to.
+
+    When frozen by PyInstaller (--onefile), __file__ resolves inside the
+    temporary extraction folder (sys._MEIPASS), which is wiped after the
+    process exits — anything written there never survives a restart. Use
+    the actual .exe's directory instead in that case.
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 # Default settings file location
-SETTINGS_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "settings.json"
-)
+SETTINGS_FILE = os.path.join(_app_base_dir(), "settings.json")
 
 
 @dataclass
