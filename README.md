@@ -130,6 +130,8 @@ Run directly in your browser — no installation needed!
         python weebcentral_scraper.py
         ```
 
+    > **Tip:** running the GUI with `python` keeps a console window open in the background for the whole session. Use `pythonw run_gui.py` instead (or double-click `WeebCentral Downloader.bat`, which does this for you) to launch it with no console at all.
+
 ---
 
 ## 🎮 GUI Overview
@@ -206,6 +208,23 @@ fpdf2
 Pillow
 ebooklib
 ```
+
+---
+
+## 📦 Building a Standalone Executable (Windows)
+
+If you'd rather have a single double-clickable `.exe` than run a Python script, you can package the GUI with [PyInstaller](https://pyinstaller.org/):
+
+```bash
+pip install pyinstaller
+python -m PyInstaller --name "WeebCentral Downloader" --onefile --windowed --icon=logoico.ico run_gui.py
+```
+
+- `--onefile` bundles everything (Python + dependencies) into a single `.exe` — no separate Python install needed to run it.
+- `--windowed` (a.k.a. `--noconsole`) means it opens straight into the GUI with no console window at all.
+- The result is written to `dist/WeebCentral Downloader.exe`. `build/` and the generated `.spec` file are build artifacts and already git-ignored.
+
+This is a frozen snapshot of the code at build time — rerun the command above after making changes to `gui/` or the scraper to pick them up in the `.exe`.
 
 ---
 
